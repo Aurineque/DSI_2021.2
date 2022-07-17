@@ -27,52 +27,98 @@ class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
   final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
+  bool grid = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gerador de Nomes Aleatórios'),
+        title: const Text("Gerador Nomes Aleatórios"),
         actions: [
           IconButton(
             icon: const Icon(Icons.list),
             onPressed: _pushSaved,
-            tooltip: 'Nomes Salvos',
+            tooltip: "Nomes Salvos",
+          )
+        ],
+        leading: grid
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    grid = false;
+                  });
+                },
+              )
+            : const SizedBox(),
+      ),
+      body: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(2, 15, 2, 10),
+            child: Column(
+              children: [
+                const Text(
+                  'Visualização em Cards',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                Switch(
+                  activeTrackColor: const Color.fromARGB(255, 183, 27, 84),
+                  value: grid,
+                  onChanged: (value) {
+                    setState(() {
+                      grid = value;
+                    });
+                  },
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(10),
+              itemBuilder: (context, int i) {
+                if (i >= _suggestions.length) {
+                  _suggestions.addAll(generateWordPairs().take(10));
+                }
+
+                return _buildRow(_suggestions[i]);
+              },
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: grid ? 2 : 1,
+                mainAxisExtent: 65,
+              ),
+            ),
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemBuilder: (context, i) {
-          if (i.isOdd) return const Divider();
+    );
+  }
 
-          final index = i ~/ 2;
-          if (index >= _suggestions.length) {
-            _suggestions.addAll(generateWordPairs().take(10));
-          }
-
-          final alreadySaved = _saved.contains(_suggestions[index]);
-
-          return ListTile(
-            title: Text(
-              _suggestions[index].asPascalCase,
-              style: _biggerFont,
-            ),
-            trailing: Icon(
-              alreadySaved ? Icons.favorite : Icons.favorite_border,
-              color: alreadySaved ? Colors.red : null,
-              semanticLabel: alreadySaved ? 'Remove from saved' : 'Save',
-            ),
-            onTap: () {
-              setState(() {
-                if (alreadySaved) {
-                  _saved.remove(_suggestions[index]);
-                } else {
-                  _saved.add(_suggestions[index]);
-                }
-              });
-            },
-          );
+  Widget _buildRow(WordPair pair) {
+    final alreadySaved = _saved.contains(pair);
+    return Card(
+      color: const Color.fromARGB(255, 143, 120, 120),
+      surfaceTintColor: Colors.black,
+      child: ListTile(
+        iconColor: const Color.fromARGB(255, 183, 27, 84),
+        title: Text(
+          pair.asPascalCase,
+          style: _biggerFont,
+        ),
+        trailing: Icon(
+          alreadySaved ? Icons.favorite : Icons.favorite_border,
+          color: alreadySaved ? Colors.red : null,
+          semanticLabel: alreadySaved ? 'Remove from saved' : 'Save',
+        ),
+        onTap: () {
+          setState(() {
+            if (alreadySaved) {
+              _saved.remove(pair);
+            } else {
+              _saved.add(pair);
+            }
+          });
         },
       ),
     );
@@ -101,7 +147,7 @@ class _RandomWordsState extends State<RandomWords> {
 
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Saved Suggestions'),
+              title: const Text('Nomes Salvos'),
             ),
             body: ListView(children: divided),
           );
@@ -115,5 +161,7 @@ class RandomWords extends StatefulWidget {
   const RandomWords({super.key});
 
   @override
-  State<RandomWords> createState() => _RandomWordsState();
+  State<RandomWords> createState() {
+    return _RandomWordsState();
+  }
 }
